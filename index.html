@@ -141,9 +141,14 @@
 
 </style>
 
+<script type="module" src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+<script type="module" src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+
+
+
 
   </head>
-  <body data-spy="scroll" data-target=".site-navbar-target" data-offset="300">
+  <body data-spy="scroll" data-target=".site-navbar-target" data-offset="300" >
 	  
 	  
     <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar ftco-navbar-light site-navbar-target" id="ftco-navbar">
@@ -600,18 +605,28 @@
 				      <li class="ftco-animate"><a href="https://www.instagram.com/___badsah_bhai___/"><span class="icon-instagram"></span></a></li>
 					</ul>
 				<br>
+				<div class="col-md d-flex justify-content-center counter-wrap ftco-animate">
+					<div class="block-18">
+					  <div class="text">
+				<div class="visitor-counter">
+						Visitors Count: 
+						<span id="visitor-count" style="color: #ffbd39;">0</span>
+				</div></div></div></div>
 		   </div>
    </div>
+   
  </section>
-
-<footer class="ftco-footer ftco-section">
+ 
+ <footer class="ftco-footer ftco-section">
 	<div class="container">
 	  <div class="row">
 		<div class="col-md-12 text-center">
-
+			
 		  <p><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
 Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This portfolio is made with <i class="icon-heart color-danger" aria-hidden="true"></i> by <a href="https://www.linkedin.com/in/aritra-deb-bb16131a3/" target="_blank">Aritra Deb</a>
 <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. --></p>
+
+
 		</div>
 	  </div>
 	</div>
@@ -677,6 +692,45 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
     }
   </script>
   
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+	import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";;
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyAnTaOr4J-7aHMw6ZeSG9c46BN1qNHJ85o",
+    authDomain: "aritra-deb-portfolio.firebaseapp.com",
+    projectId: "aritra-deb-portfolio",
+    storageBucket: "aritra-deb-portfolio.appspot.com",
+    messagingSenderId: "574817550517",
+    appId: "1:574817550517:web:c5b518b5a11bb4cd62befc",
+    measurementId: "G-YPBEB8VW8G"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+  async function updateVisitorCount() {
+    const docRef = doc(db, 'visitorCount', 'count');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const currentCount = docSnap.data().value;
+      const newCount = currentCount + 1;
+      await updateDoc(docRef, { value: newCount });
+      document.getElementById('visitor-count').textContent = newCount;
+    } else {
+      await setDoc(docRef, { value: 1 });
+      document.getElementById('visitor-count').textContent = 1;
+    }
+  }
+
+  updateVisitorCount();
+  </script>
 
   <script src="js/jquery.min.js"></script>
   <script src="js/jquery-migrate-3.0.1.min.js"></script>
