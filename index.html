@@ -162,16 +162,16 @@
   transition: color 0.3s;
 }
 
-.star-rating .fa-star.selected {
-  color: #ffbd39;
+.star-rating .fa-star.selected,
+.star-rating .fa-star.selected ~ .fa-star {
+  color: #ffbd39; /* Selected and all previous stars color */
 }
 
 .star-rating .fa-star:hover,
 .star-rating .fa-star:hover ~ .fa-star {
-  color: #ffbd39;
+  color: #ffbd39; /* Hovered star and all previous stars color */
 }
-
-    
+   
 </style>
 
 <script type="module" src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
@@ -679,7 +679,7 @@
 				  </section>
 				  
 
-				<br>
+				
 				<div class="col-md d-flex justify-content-center counter-wrap ftco-animate">
 					<div class="block-18">
 					  <div class="text">
@@ -813,85 +813,100 @@ import { getFirestore, collection, doc, getDoc, updateDoc, setDoc, addDoc, serve
     updateVisitorCount();
 
     document.addEventListener("DOMContentLoaded", function () {
-        const stars = document.querySelectorAll(".star-rating .fa-star");
-        const ratingResult = document.getElementById("rating-result");
-        const totalRatingsElem = document.getElementById("total-ratings");
-        let selectedRating = 0;
-        let ratedOnce = false; // To track if user has rated already
+    const stars = document.querySelectorAll(".star-rating .fa-star");
+    const ratingResult = document.getElementById("rating-result");
+    const totalRatingsElem = document.getElementById("total-ratings");
+    let selectedRating = 0;
+    let ratedOnce = false;
 
-        stars.forEach(star => {
-            star.addEventListener("click", () => {
-                if (!ratedOnce) {
-                    selectedRating = parseInt(star.getAttribute("data-rating"));
-                    stars.forEach(s => s.classList.remove("selected"));
-                    star.classList.add("selected");
-                    star.previousElementSibling?.classList.add("selected");
-                    star.nextElementSibling?.classList.remove("selected");
-                    ratingResult.textContent = `You rated this website ${selectedRating} stars`;
+    // Check if user has already rated and show their rating
+    if (localStorage.getItem("ratedOnce")) {
+        ratedOnce = true;
+        selectedRating = parseInt(localStorage.getItem("selectedRating"));
+        stars.forEach((star, index) => {
+            if (index < selectedRating) {
+                star.classList.add("selected");
+            }
+        });
+        ratingResult.textContent = `You rated this website ${selectedRating} stars`;
+    }
 
-                    // Store the rating locally (e.g., in localStorage)
-                    localStorage.setItem("ratedOnce", true);
-                    localStorage.setItem("selectedRating", selectedRating);
-
-                    ratedOnce = true;
-
-                    // Store the rating in Firebase
-                    addDoc(collection(db, "ratings"), {
-                        rating: selectedRating,
-                        timestamp: serverTimestamp()
-                    })
-                    .then(docRef => {
-                        console.log("Rating added with ID: ", docRef.id);
-                        updateTotalRatings();
-                    })
-                    .catch(error => {
-                        console.error("Error adding rating: ", error);
-                    });
-                } else {
-                    showSuccessMessage('You have already rated this website. Thank you for showing your interest');
-                }
-            });
-            star.addEventListener("mouseover", () => {
-                if (!ratedOnce) {
-                    stars.forEach(s => s.classList.remove("selected"));
-                    star.classList.add("selected");
-                    star.previousElementSibling?.classList.add("selected");
-                }
-            });
-
-            star.addEventListener("mouseout", () => {
-                if (!ratedOnce) {
-                    stars.forEach(s => s.classList.remove("selected"));
-                    for (let i = 0; i < selectedRating; i++) {
-                        stars[i].classList.add("selected");
+    stars.forEach((star, index) => {
+        star.addEventListener("click", () => {
+            if (!ratedOnce) {
+                selectedRating = index + 1;
+                stars.forEach((s, i) => {
+                    if (i < selectedRating) {
+                        s.classList.add("selected");
+                    } else {
+                        s.classList.remove("selected");
                     }
-                }
-            });
+                });
+                ratingResult.textContent = `You rated this website ${selectedRating} stars`;
+
+                // Store the rating locally (e.g., in localStorage)
+                localStorage.setItem("ratedOnce", true);
+                localStorage.setItem("selectedRating", selectedRating);
+
+                ratedOnce = true;
+
+                // Store the rating in Firestore or perform other actions
+                 addDoc(collection(db, "ratings"), {
+                    rating: selectedRating,
+                     timestamp: serverTimestamp()
+                 }).then(docRef => {
+                     console.log("Rating added with ID: ", docRef.id);
+                    updateTotalRatings();
+                 }).catch(error => {
+                     console.error("Error adding rating: ", error);
+                 });
+            } else {
+                showSuccessMessage('You have already rated this website. Thank you for showing your interest');
+            }
         });
 
-        // Check if user has already rated and show their rating
-        if (localStorage.getItem("ratedOnce")) {
-            ratedOnce = true;
-            selectedRating = parseInt(localStorage.getItem("selectedRating"));
-            stars[selectedRating - 1].classList.add("selected");
-            ratingResult.textContent = `You rated this website ${selectedRating} stars`;
-        }
+        star.addEventListener("mouseover", () => {
+            if (!ratedOnce) {
+                stars.forEach((s, i) => {
+                    if (i <= index) {
+                        s.classList.add("selected");
+                    } else {
+                        s.classList.remove("selected");
+                    }
+                });
+            }
+        });
 
-        // Function to update total ratings
-        function updateTotalRatings() {
-    const ratingsCollectionRef = collection(db, "ratings");
-    getDocs(ratingsCollectionRef).then(querySnapshot => {
-        let totalRatings = querySnapshot.size;
-        console.log("Total Ratings:", totalRatings); // Check the total ratings in the console
-        totalRatingsElem.textContent = `Total Ratings: ${totalRatings}`;
-    }).catch(error => {
-        console.error("Error getting total ratings:", error);
-        totalRatingsElem.textContent = "Total Ratings: Error loading";
+        star.addEventListener("mouseout", () => {
+            if (!ratedOnce) {
+                stars.forEach((s, i) => {
+                    if (i < selectedRating) {
+                        s.classList.add("selected");
+                    } else {
+                        s.classList.remove("selected");
+                    }
+                });
+            }
+        });
     });
-}
-        // Load total ratings initially
-        updateTotalRatings();
-    });
+
+    // Function to update total ratings
+    function updateTotalRatings() {
+        const ratingsCollectionRef = collection(db, "ratings");
+        getDocs(ratingsCollectionRef).then(querySnapshot => {
+            let totalRatings = querySnapshot.size;
+            console.log("Total Ratings:", totalRatings); // Check the total ratings in the console
+            totalRatingsElem.textContent = `Total Ratings: ${totalRatings}`;
+        }).catch(error => {
+            console.error("Error getting total ratings:", error);
+            totalRatingsElem.textContent = "Total Ratings: Error loading";
+        });
+    }
+
+    // Load total ratings initially
+    updateTotalRatings();
+});
+
   </script>
 
   
