@@ -149,6 +149,27 @@
   border-radius: 50%;
 }
 
+.star-rating {
+  display: flex;
+  justify-content: center;
+  font-size: 2rem;
+  cursor: pointer;
+  color: #d3d3d3;
+}
+
+.star-rating .fa-star {
+  margin: 0 5px;
+  transition: color 0.3s;
+}
+
+.star-rating .fa-star.selected {
+  color: #ffbd39;
+}
+
+.star-rating .fa-star:hover,
+.star-rating .fa-star:hover ~ .fa-star {
+  color: #ffbd39;
+}
 
     
 </style>
@@ -636,6 +657,29 @@
 				      <li class="ftco-animate"><a href="https://www.instagram.com/___badsah_bhai___/"><span class="icon-instagram"></span></a></li>
 					</ul>
 				<br>
+
+				<section id="rating-section" class="ftco-section">
+					<div class="container">
+					  <div class="row justify-content-center mb-5 pb-5">
+						<div class="col-md-7 heading-section text-center ftco-animate">
+						  <h1 class="big big-2">Rate My Website</h1>
+						  <h2 class="mb-4">Please rate your experience</h2>
+						  <div class="star-rating">
+							<span class="fa fa-star" data-rating="1"></span>
+							<span class="fa fa-star" data-rating="2"></span>
+							<span class="fa fa-star" data-rating="3"></span>
+							<span class="fa fa-star" data-rating="4"></span>
+							<span class="fa fa-star" data-rating="5"></span>
+						  </div>
+						  <p id="rating-result" class="mt-3">No rating yet</p>
+						  <p id="total-ratings" class="mt-3">Total Ratings: Loding...</p>
+						</div>
+					  </div>
+					</div>
+				  </section>
+				  
+
+				<br>
 				<div class="col-md d-flex justify-content-center counter-wrap ftco-animate">
 					<div class="block-18">
 					  <div class="text">
@@ -663,7 +707,7 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
 
   <!-- loader -->
   <div id="ftco-loader" class="show fullscreen"><svg class="circular" width="48px" height="48px"><circle class="path-bg" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke="#eeeeee"/><circle class="path" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke-miterlimit="10" stroke="#F96D00"/></svg></div>
-
+  
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       var form = document.querySelector('.contact-form');
@@ -724,7 +768,8 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
   <script type="module">
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, updateDoc, setDoc, addDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 
     // Your web app's Firebase configuration
     const firebaseConfig = {
@@ -766,7 +811,90 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
     }
 
     updateVisitorCount();
-</script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const stars = document.querySelectorAll(".star-rating .fa-star");
+        const ratingResult = document.getElementById("rating-result");
+        const totalRatingsElem = document.getElementById("total-ratings");
+        let selectedRating = 0;
+        let ratedOnce = false; // To track if user has rated already
+
+        stars.forEach(star => {
+            star.addEventListener("click", () => {
+                if (!ratedOnce) {
+                    selectedRating = parseInt(star.getAttribute("data-rating"));
+                    stars.forEach(s => s.classList.remove("selected"));
+                    star.classList.add("selected");
+                    star.previousElementSibling?.classList.add("selected");
+                    star.nextElementSibling?.classList.remove("selected");
+                    ratingResult.textContent = `You rated this website ${selectedRating} stars`;
+
+                    // Store the rating locally (e.g., in localStorage)
+                    localStorage.setItem("ratedOnce", true);
+                    localStorage.setItem("selectedRating", selectedRating);
+
+                    ratedOnce = true;
+
+                    // Store the rating in Firebase
+                    addDoc(collection(db, "ratings"), {
+                        rating: selectedRating,
+                        timestamp: serverTimestamp()
+                    })
+                    .then(docRef => {
+                        console.log("Rating added with ID: ", docRef.id);
+                        updateTotalRatings();
+                    })
+                    .catch(error => {
+                        console.error("Error adding rating: ", error);
+                    });
+                } else {
+                    alert("You have already rated this website.");
+                }
+            });
+            star.addEventListener("mouseover", () => {
+                if (!ratedOnce) {
+                    stars.forEach(s => s.classList.remove("selected"));
+                    star.classList.add("selected");
+                    star.previousElementSibling?.classList.add("selected");
+                }
+            });
+
+            star.addEventListener("mouseout", () => {
+                if (!ratedOnce) {
+                    stars.forEach(s => s.classList.remove("selected"));
+                    for (let i = 0; i < selectedRating; i++) {
+                        stars[i].classList.add("selected");
+                    }
+                }
+            });
+        });
+
+        // Check if user has already rated and show their rating
+        if (localStorage.getItem("ratedOnce")) {
+            ratedOnce = true;
+            selectedRating = parseInt(localStorage.getItem("selectedRating"));
+            stars[selectedRating - 1].classList.add("selected");
+            ratingResult.textContent = `You rated this website ${selectedRating} stars`;
+        }
+
+        // Function to update total ratings
+        function updateTotalRatings() {
+    const ratingsCollectionRef = collection(db, "ratings");
+    getDocs(ratingsCollectionRef).then(querySnapshot => {
+        let totalRatings = querySnapshot.size;
+        console.log("Total Ratings:", totalRatings); // Check the total ratings in the console
+        totalRatingsElem.textContent = `Total Ratings: ${totalRatings}`;
+    }).catch(error => {
+        console.error("Error getting total ratings:", error);
+        totalRatingsElem.textContent = "Total Ratings: Error loading";
+    });
+}
+        // Load total ratings initially
+        updateTotalRatings();
+    });
+  </script>
+
+  
 
 
   <script src="js/jquery.min.js"></script>
