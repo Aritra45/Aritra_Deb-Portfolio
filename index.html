@@ -848,7 +848,7 @@ import { getFirestore, collection, doc, getDoc, updateDoc, setDoc, addDoc, serve
                         console.error("Error adding rating: ", error);
                     });
                 } else {
-                    alert("You have already rated this website.");
+                    showSuccessMessage('You have already rated this website. Thank you for showing your interest');
                 }
             });
             star.addEventListener("mouseover", () => {
