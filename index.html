@@ -171,7 +171,10 @@
 .star-rating .fa-star:hover ~ .fa-star {
   color: #ffbd39; /* Hovered star and all previous stars color */
 }
-   
+.yellow-star {
+    color: yellow; /* Set the star color to yellow */
+}
+
 </style>
 
 <script type="module" src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
@@ -672,7 +675,11 @@
 							<span class="fa fa-star" data-rating="5"></span>
 						  </div>
 						  <p id="rating-result" class="mt-3">No rating yet</p>
-						  <p id="total-ratings" class="mt-3">Total Ratings: Loding...</p>
+						  <p id="averageRating" class="mt-3">Total Ratings: Loding... </p>
+						  <div id="averageRatingContainer">
+							<p id="averageRating"></p>
+						</div>
+						
 						</div>
 					  </div>
 					</div>
@@ -891,20 +898,47 @@ import { getFirestore, collection, doc, getDoc, updateDoc, setDoc, addDoc, serve
     });
 
     // Function to update total ratings
-    function updateTotalRatings() {
-        const ratingsCollectionRef = collection(db, "ratings");
-        getDocs(ratingsCollectionRef).then(querySnapshot => {
-            let totalRatings = querySnapshot.size;
-            console.log("Total Ratings:", totalRatings); // Check the total ratings in the console
-            totalRatingsElem.textContent = `Total Ratings: ${totalRatings}`;
-        }).catch(error => {
-            console.error("Error getting total ratings:", error);
-            totalRatingsElem.textContent = "Total Ratings: Error loading";
-        });
-    }
+    // Define averageRatingElem and get reference to the HTML element
+	const averageRatingElem = document.getElementById("averageRating");
 
-    // Load total ratings initially
-    updateTotalRatings();
+function updateAverageRating() {
+    const ratingsCollectionRef = collection(db, "ratings");
+    getDocs(ratingsCollectionRef).then(querySnapshot => {
+        let totalRatings = querySnapshot.size;
+        let totalStars = 0;
+
+        // Calculate total stars given by all users
+        querySnapshot.forEach(doc => {
+            const ratingData = doc.data();
+            totalStars += ratingData.rating; // Assuming each document has a field 'rating'
+        });
+
+        // Calculate average rating
+        let averageRating = totalStars / totalRatings;
+        averageRating = averageRating.toFixed(1); // Round to one decimal place
+
+        console.log("Total Rating:", averageRating); // Log the average rating (optional)
+
+        // Clear previous content
+        averageRatingElem.innerHTML = "";
+
+        // Display average rating text
+        averageRatingElem.textContent = `Total Rating: ${averageRating}`;
+
+        // Append a yellow star
+        const starIcon = document.createElement("i");
+        starIcon.classList.add("fa", "fa-star", "yellow-star"); // Add 'yellow-star' class for styling
+        averageRatingElem.appendChild(starIcon);
+    }).catch(error => {
+        console.error("Error calculating average rating:", error); // Log any errors to console
+        averageRatingElem.textContent = "Total Rating: Error loading"; // Display error message in UI if fetching fails
+    });
+}
+
+// Load average rating initially
+updateAverageRating();
+
+
 });
 
   </script>
