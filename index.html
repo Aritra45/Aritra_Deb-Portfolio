@@ -4,6 +4,8 @@
     <title>Aritra Deb Portfolio</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+
 
 	<link rel="icon" href="images/profile-about.png" type="image/x-icon">
     
@@ -532,6 +534,28 @@
     				</div>
     			</div>
         </div>
+
+        <br>
+
+        <div class="row">
+          <h1 class="big-4">Work Experiences</h1>
+          <div class="underline"></div>
+        </div>
+        <br>
+        
+        <div class="row">
+    
+              <div class="col-md-6">
+                <div class="resume-wrap ftco-animate">
+                  <span class="date">2025-Now</span>
+                  <h2>Software Developer</h2>
+                  <span class="position">Swabhav Techlabs Solutions Private Limited</span>
+                </div>
+              </div>
+              
+    
+            </div>
+
     		<div class="row justify-content-center mt-5">
     			<div class="col-md-6 text-center ftco-animate">
     				<p><a href="Aritra_Deb _CV_2024.pdf" class="btn btn-primary py-4 px-5" target="blank">Download CV</a>
@@ -602,14 +626,69 @@
               </div>
             </div>
           </div>
+
           <div class="col-md d-flex justify-content-center counter-wrap ftco-animate">
             <div class="block-18">
               <div class="text">
-                <strong class="number" data-number="28">0</strong>
+                <strong id="repo-count" class="number" data-number="0">Loading...</strong>
                 <span>Projects</span>
               </div>
             </div>
           </div>
+          
+          <script>
+            document.addEventListener("DOMContentLoaded", function () {
+              async function fetchGitHubRepoCount(username) {
+                try {
+                  const response = await fetch(`https://api.github.com/users/${username}`);
+                  if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
+                  
+                  const data = await response.json();
+                  console.log("GitHub Data:", data);
+          
+                  const repoCountElement = document.getElementById("repo-count");
+          
+                  if (repoCountElement) {
+                    let repoCount = data.public_repos || 0;
+          
+                    // Update data-number attribute
+                    repoCountElement.setAttribute("data-number", repoCount);
+                    
+                    // Optionally, trigger animation by setting inner text
+                    animateNumber(repoCountElement, repoCount);
+                  } else {
+                    console.error("Element with ID 'repo-count' not found.");
+                  }
+                } catch (error) {
+                  console.error("Error fetching repository count:", error);
+                }
+              }
+          
+              function animateNumber(element, targetNumber) {
+                let currentNumber = 0;
+                let step = Math.ceil(targetNumber / 50); // Adjust speed of counting
+                let interval = setInterval(() => {
+                  currentNumber += step;
+                  if (currentNumber >= targetNumber) {
+                    currentNumber = targetNumber;
+                    clearInterval(interval);
+                  }
+                  element.textContent = currentNumber;
+                }, 30); // Speed of animation
+              }
+          
+              // Fetch GitHub repo count
+              setTimeout(() => {
+                fetchGitHubRepoCount("Aritra45");
+              }, 300);
+            });
+          </script>
+          
+          
+          
+          
+          
+          
           
           <div class="col-md d-flex justify-content-center counter-wrap ftco-animate">
             <div class="block-18">
@@ -1016,7 +1095,8 @@ updateAverageRating();
   <script src="js/jquery.stellar.min.js"></script>
   <script src="js/owl.carousel.min.js"></script>
   <script src="js/jquery.magnific-popup.min.js"></script>
-  <script src="js/aos.js"></script>
+  <!-- <script src="js/aos.js"></script> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
   <script src="js/jquery.animateNumber.min.js"></script>
   <script src="js/scrollax.min.js"></script>
   
